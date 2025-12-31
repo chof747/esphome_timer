@@ -1,12 +1,12 @@
-#include "kitchen_timer.h"
+#include "timer.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
-namespace kitchen_timer {
+namespace timer_ext {
 
-static const char *const TAG = "kitchen_timer";
+static const char *const TAG = "timer_ext";
 
-void KitchenTimerComponent::setup() {
+void TimerComponent::setup() {
   this->set_interval(this->tick_interval_ms_, [this]() { this->tick_(); });
 
   if (this->ha_state_sensor_ != nullptr) {
@@ -22,8 +22,8 @@ void KitchenTimerComponent::setup() {
   this->publish_state_();
 }
 
-void KitchenTimerComponent::dump_config() {
-  ESP_LOGCONFIG(TAG, "Kitchen Timer:");
+void TimerComponent::dump_config() {
+  ESP_LOGCONFIG(TAG, "Timer Component:");
   ESP_LOGCONFIG(TAG, "  Tick Interval: %u ms", this->tick_interval_ms_);
   ESP_LOGCONFIG(TAG, "  Sync Interval: %u ms", this->sync_interval_ms_);
   ESP_LOGCONFIG(TAG, "  Max Duration: %u s", this->max_duration_seconds_);
@@ -37,12 +37,12 @@ void KitchenTimerComponent::dump_config() {
   LOG_BINARY_SENSOR("  ", "Overdue", this->overdue_binary_sensor_);
 }
 
-void KitchenTimerComponent::set_max_duration_seconds(uint32_t value) {
+void TimerComponent::set_max_duration_seconds(uint32_t value) {
   this->max_duration_seconds_ = value;
   this->clamp_set_and_remaining_();
 }
 
-void KitchenTimerComponent::set_seconds(int seconds) {
+void TimerComponent::set_seconds(int seconds) {
   int clamped = this->clamp_seconds_(seconds);
   if (this->set_seconds_ == clamped) {
     return;
@@ -51,11 +51,11 @@ void KitchenTimerComponent::set_seconds(int seconds) {
   this->publish_state_();
 }
 
-void KitchenTimerComponent::start() { this->start_(this->set_seconds_, false); }
+void TimerComponent::start() { this->start_(this->set_seconds_, false); }
 
-void KitchenTimerComponent::start(int seconds) { this->start_(seconds, false); }
+void TimerComponent::start(int seconds) { this->start_(seconds, false); }
 
-void KitchenTimerComponent::pause(bool from_ha) {
+void TimerComponent::pause(bool from_ha) {
   if (this->state_ != TimerState::RUNNING) {
     return;
   }
@@ -66,7 +66,7 @@ void KitchenTimerComponent::pause(bool from_ha) {
   }
 }
 
-void KitchenTimerComponent::resume(bool from_ha) {
+void TimerComponent::resume(bool from_ha) {
   if (this->state_ != TimerState::PAUSED) {
     return;
   }
@@ -79,7 +79,7 @@ void KitchenTimerComponent::resume(bool from_ha) {
   }
 }
 
-void KitchenTimerComponent::cancel(bool from_ha) {
+void TimerComponent::cancel(bool from_ha) {
   this->state_ = TimerState::STOPPED;
   this->remaining_seconds_ = 0;
   this->overdue_ = false;
@@ -90,7 +90,7 @@ void KitchenTimerComponent::cancel(bool from_ha) {
   }
 }
 
-void KitchenTimerComponent::start_(int seconds, bool from_ha) {
+void TimerComponent::start_(int seconds, bool from_ha) {
   int clamped = this->clamp_seconds_(seconds);
   this->set_seconds_ = clamped;
   this->remaining_seconds_ = clamped;
@@ -104,7 +104,7 @@ void KitchenTimerComponent::start_(int seconds, bool from_ha) {
   }
 }
 
-void KitchenTimerComponent::tick_() {
+void TimerComponent::tick_() {
   if (this->state_ != TimerState::RUNNING) {
     return;
   }
@@ -124,7 +124,7 @@ void KitchenTimerComponent::tick_() {
   }
 }
 
-void KitchenTimerComponent::publish_state_() {
+void TimerComponent::publish_state_() {
   if (this->remaining_seconds_sensor_ != nullptr) {
     this->remaining_seconds_sensor_->publish_state(this->remaining_seconds_);
   }
@@ -145,7 +145,7 @@ void KitchenTimerComponent::publish_state_() {
   }
 }
 
-const char *KitchenTimerComponent::state_to_string_() const {
+const char *TimerComponent::state_to_string_() const {
   if (this->state_ == TimerState::STOPPED) {
     return "stopped";
   }
@@ -158,7 +158,7 @@ const char *KitchenTimerComponent::state_to_string_() const {
   return "running";
 }
 
-int KitchenTimerComponent::clamp_seconds_(int seconds) const {
+int TimerComponent::clamp_seconds_(int seconds) const {
   if (seconds < 0) {
     return 0;
   }
@@ -168,19 +168,19 @@ int KitchenTimerComponent::clamp_seconds_(int seconds) const {
   return seconds;
 }
 
-void KitchenTimerComponent::clamp_set_and_remaining_() {
+void TimerComponent::clamp_set_and_remaining_() {
   this->set_seconds_ = this->clamp_seconds_(this->set_seconds_);
   this->remaining_seconds_ = this->clamp_seconds_(this->remaining_seconds_);
 }
 
-void KitchenTimerComponent::mark_synced_from_ha_() {
+void TimerComponent::mark_synced_from_ha_() {
   if (!this->enable_ha_sync_) {
     return;
   }
   this->synched_ = (this->ha_state_sensor_ != nullptr || this->ha_remaining_sensor_ != nullptr);
 }
 
-void KitchenTimerComponent::handle_ha_state_(const std::string &state) {
+void TimerComponent::handle_ha_state_(const std::string &state) {
   if (!this->enable_ha_sync_) {
     return;
   }
@@ -198,7 +198,6 @@ void KitchenTimerComponent::handle_ha_state_(const std::string &state) {
     if (this->state_ == TimerState::RUNNING) {
       this->pause(true);
     } else if (this->state_ == TimerState::STOPPED) {
-      // Adopt HA pause state if we were stopped
       int ha_remaining = this->ha_remaining_sensor_ != nullptr ? (int) this->ha_remaining_sensor_->state : 0;
       if (ha_remaining > 0) {
         this->set_seconds_ = this->clamp_seconds_(ha_remaining);
@@ -225,7 +224,7 @@ void KitchenTimerComponent::handle_ha_state_(const std::string &state) {
   }
 }
 
-void KitchenTimerComponent::handle_ha_remaining_(float value) {
+void TimerComponent::handle_ha_remaining_(float value) {
   if (!this->enable_ha_sync_) {
     return;
   }
@@ -237,7 +236,6 @@ void KitchenTimerComponent::handle_ha_remaining_(float value) {
   }
 
   if (this->state_ == TimerState::STOPPED) {
-    // If HA is counting while we were stopped, adopt the remaining value and mark running
     int remaining = static_cast<int>(value);
     if (remaining > 0) {
       this->set_seconds_ = this->clamp_seconds_(remaining);
@@ -264,5 +262,5 @@ void KitchenTimerComponent::handle_ha_remaining_(float value) {
   this->publish_state_();
 }
 
-}  // namespace kitchen_timer
+}  // namespace timer_ext
 }  // namespace esphome

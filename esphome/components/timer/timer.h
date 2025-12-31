@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace esphome {
-namespace kitchen_timer {
+namespace timer_ext {
 
 enum class TimerState : uint8_t {
   STOPPED = 0,
@@ -18,14 +18,14 @@ enum class TimerState : uint8_t {
   PAUSED = 2,
 };
 
-class KitchenTimerStartedTrigger;
-class KitchenTimerPausedTrigger;
-class KitchenTimerResumedTrigger;
-class KitchenTimerCancelledTrigger;
-class KitchenTimerFinishedTrigger;
-class KitchenTimerTickTrigger;
+class TimerStartedTrigger;
+class TimerPausedTrigger;
+class TimerResumedTrigger;
+class TimerCancelledTrigger;
+class TimerFinishedTrigger;
+class TimerTickTrigger;
 
-class KitchenTimerComponent : public Component {
+class TimerComponent : public Component {
  public:
   void setup() override;
   void dump_config() override;
@@ -46,12 +46,12 @@ class KitchenTimerComponent : public Component {
   void set_paused_binary_sensor(binary_sensor::BinarySensor *sensor) { this->paused_binary_sensor_ = sensor; }
   void set_overdue_binary_sensor(binary_sensor::BinarySensor *sensor) { this->overdue_binary_sensor_ = sensor; }
 
-  void register_started_trigger(KitchenTimerStartedTrigger *trigger) { this->started_triggers_.push_back(trigger); }
-  void register_paused_trigger(KitchenTimerPausedTrigger *trigger) { this->paused_triggers_.push_back(trigger); }
-  void register_resumed_trigger(KitchenTimerResumedTrigger *trigger) { this->resumed_triggers_.push_back(trigger); }
-  void register_cancelled_trigger(KitchenTimerCancelledTrigger *trigger) { this->cancelled_triggers_.push_back(trigger); }
-  void register_finished_trigger(KitchenTimerFinishedTrigger *trigger) { this->finished_triggers_.push_back(trigger); }
-  void register_tick_trigger(KitchenTimerTickTrigger *trigger) { this->tick_triggers_.push_back(trigger); }
+  void register_started_trigger(TimerStartedTrigger *trigger) { this->started_triggers_.push_back(trigger); }
+  void register_paused_trigger(TimerPausedTrigger *trigger) { this->paused_triggers_.push_back(trigger); }
+  void register_resumed_trigger(TimerResumedTrigger *trigger) { this->resumed_triggers_.push_back(trigger); }
+  void register_cancelled_trigger(TimerCancelledTrigger *trigger) { this->cancelled_triggers_.push_back(trigger); }
+  void register_finished_trigger(TimerFinishedTrigger *trigger) { this->finished_triggers_.push_back(trigger); }
+  void register_tick_trigger(TimerTickTrigger *trigger) { this->tick_triggers_.push_back(trigger); }
 
   void set_seconds(int seconds);
   void start();
@@ -97,47 +97,47 @@ class KitchenTimerComponent : public Component {
   binary_sensor::BinarySensor *paused_binary_sensor_{nullptr};
   binary_sensor::BinarySensor *overdue_binary_sensor_{nullptr};
 
-  std::vector<KitchenTimerStartedTrigger *> started_triggers_;
-  std::vector<KitchenTimerPausedTrigger *> paused_triggers_;
-  std::vector<KitchenTimerResumedTrigger *> resumed_triggers_;
-  std::vector<KitchenTimerCancelledTrigger *> cancelled_triggers_;
-  std::vector<KitchenTimerFinishedTrigger *> finished_triggers_;
-  std::vector<KitchenTimerTickTrigger *> tick_triggers_;
+  std::vector<TimerStartedTrigger *> started_triggers_;
+  std::vector<TimerPausedTrigger *> paused_triggers_;
+  std::vector<TimerResumedTrigger *> resumed_triggers_;
+  std::vector<TimerCancelledTrigger *> cancelled_triggers_;
+  std::vector<TimerFinishedTrigger *> finished_triggers_;
+  std::vector<TimerTickTrigger *> tick_triggers_;
 };
 
-class KitchenTimerStartedTrigger : public Trigger<bool> {
+class TimerStartedTrigger : public Trigger<bool> {
  public:
-  explicit KitchenTimerStartedTrigger(KitchenTimerComponent *parent) { parent->register_started_trigger(this); }
+  explicit TimerStartedTrigger(TimerComponent *parent) { parent->register_started_trigger(this); }
 };
 
-class KitchenTimerPausedTrigger : public Trigger<bool> {
+class TimerPausedTrigger : public Trigger<bool> {
  public:
-  explicit KitchenTimerPausedTrigger(KitchenTimerComponent *parent) { parent->register_paused_trigger(this); }
+  explicit TimerPausedTrigger(TimerComponent *parent) { parent->register_paused_trigger(this); }
 };
 
-class KitchenTimerResumedTrigger : public Trigger<bool> {
+class TimerResumedTrigger : public Trigger<bool> {
  public:
-  explicit KitchenTimerResumedTrigger(KitchenTimerComponent *parent) { parent->register_resumed_trigger(this); }
+  explicit TimerResumedTrigger(TimerComponent *parent) { parent->register_resumed_trigger(this); }
 };
 
-class KitchenTimerCancelledTrigger : public Trigger<bool> {
+class TimerCancelledTrigger : public Trigger<bool> {
  public:
-  explicit KitchenTimerCancelledTrigger(KitchenTimerComponent *parent) { parent->register_cancelled_trigger(this); }
+  explicit TimerCancelledTrigger(TimerComponent *parent) { parent->register_cancelled_trigger(this); }
 };
 
-class KitchenTimerFinishedTrigger : public Trigger<bool> {
+class TimerFinishedTrigger : public Trigger<bool> {
  public:
-  explicit KitchenTimerFinishedTrigger(KitchenTimerComponent *parent) { parent->register_finished_trigger(this); }
+  explicit TimerFinishedTrigger(TimerComponent *parent) { parent->register_finished_trigger(this); }
 };
 
-class KitchenTimerTickTrigger : public Trigger<int> {
+class TimerTickTrigger : public Trigger<int> {
  public:
-  explicit KitchenTimerTickTrigger(KitchenTimerComponent *parent) { parent->register_tick_trigger(this); }
+  explicit TimerTickTrigger(TimerComponent *parent) { parent->register_tick_trigger(this); }
 };
 
-template<typename... Ts> class KitchenTimerStartAction : public Action<Ts...> {
+template<typename... Ts> class TimerStartAction : public Action<Ts...> {
  public:
-  explicit KitchenTimerStartAction(KitchenTimerComponent *parent) : parent_(parent) {}
+  explicit TimerStartAction(TimerComponent *parent) : parent_(parent) {}
 
   TEMPLATABLE_VALUE(int, seconds)
 
@@ -150,39 +150,39 @@ template<typename... Ts> class KitchenTimerStartAction : public Action<Ts...> {
   }
 
  protected:
-  KitchenTimerComponent *parent_;
+  TimerComponent *parent_;
 };
 
-template<typename... Ts> class KitchenTimerPauseAction : public Action<Ts...> {
+template<typename... Ts> class TimerPauseAction : public Action<Ts...> {
  public:
-  explicit KitchenTimerPauseAction(KitchenTimerComponent *parent) : parent_(parent) {}
+  explicit TimerPauseAction(TimerComponent *parent) : parent_(parent) {}
   void play(const Ts &... x) override { this->parent_->pause(); }
 
  protected:
-  KitchenTimerComponent *parent_;
+  TimerComponent *parent_;
 };
 
-template<typename... Ts> class KitchenTimerResumeAction : public Action<Ts...> {
+template<typename... Ts> class TimerResumeAction : public Action<Ts...> {
  public:
-  explicit KitchenTimerResumeAction(KitchenTimerComponent *parent) : parent_(parent) {}
+  explicit TimerResumeAction(TimerComponent *parent) : parent_(parent) {}
   void play(const Ts &... x) override { this->parent_->resume(); }
 
  protected:
-  KitchenTimerComponent *parent_;
+  TimerComponent *parent_;
 };
 
-template<typename... Ts> class KitchenTimerCancelAction : public Action<Ts...> {
+template<typename... Ts> class TimerCancelAction : public Action<Ts...> {
  public:
-  explicit KitchenTimerCancelAction(KitchenTimerComponent *parent) : parent_(parent) {}
+  explicit TimerCancelAction(TimerComponent *parent) : parent_(parent) {}
   void play(const Ts &... x) override { this->parent_->cancel(); }
 
  protected:
-  KitchenTimerComponent *parent_;
+  TimerComponent *parent_;
 };
 
-template<typename... Ts> class KitchenTimerSetSecondsAction : public Action<Ts...> {
+template<typename... Ts> class TimerSetSecondsAction : public Action<Ts...> {
  public:
-  explicit KitchenTimerSetSecondsAction(KitchenTimerComponent *parent) : parent_(parent) {}
+  explicit TimerSetSecondsAction(TimerComponent *parent) : parent_(parent) {}
 
   TEMPLATABLE_VALUE(int, seconds)
 
@@ -194,8 +194,8 @@ template<typename... Ts> class KitchenTimerSetSecondsAction : public Action<Ts..
   }
 
  protected:
-  KitchenTimerComponent *parent_;
+  TimerComponent *parent_;
 };
 
-}  // namespace kitchen_timer
+}  // namespace timer_ext
 }  // namespace esphome

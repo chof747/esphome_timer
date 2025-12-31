@@ -1,6 +1,6 @@
-# Kitchen Timer ESPHome External Component
+# Timer ESPHome External Component
 
-This is an external ESPHome component that provides a reusable kitchen timer state machine.
+This is an external ESPHome component that provides a reusable timer state machine.
 It is designed to be independent of any alarm output (buzzer, I2S audio, light, relay, etc.).
 You can attach your own alarm behavior using the exposed triggers and optional sensors.
 
@@ -15,11 +15,11 @@ You can attach your own alarm behavior using the exposed triggers and optional s
 ## Folder Layout
 
 ```
-external_components/kitchen_timer/
-  esphome/components/kitchen_timer/
+external_components/timer/
+  esphome/components/timer/
     __init__.py
-    kitchen_timer.h
-    kitchen_timer.cpp
+    timer.h
+    timer.cpp
 ```
 
 ## Usage (Example)
@@ -30,15 +30,15 @@ Add the external component to your ESPHome YAML:
 external_components:
   - source:
       type: local
-      path: /Users/chof/development/esphome/external_components/kitchen_timer/esphome/components
+      path: /Users/chof/development/esphome/external_components/timer/esphome/components
     refresh: 0s
 ```
 
 Then configure the component:
 
 ```yaml
-kitchen_timer:
-  id: kitchen_timer
+timer:
+  id: kitchentimer
   tick_interval: 1s
   sync_interval: 5s
   max_duration: 7200s
@@ -47,24 +47,21 @@ kitchen_timer:
   ha_remaining_sensor: ha_kuchentimer_remaining
 
   state:
-    name: "Kitchen Timer State"
+    name: "Timer State"
   remaining_seconds:
-    name: "Kitchen Timer Remaining"
+    name: "Timer Remaining"
   set_seconds:
-    name: "Kitchen Timer Set"
+    name: "Timer Set"
   running:
-    name: "Kitchen Timer Running"
+    name: "Timer Running"
   paused:
-    name: "Kitchen Timer Paused"
+    name: "Timer Paused"
   overdue:
-    name: "Kitchen Timer Overdue"
+    name: "Timer Overdue"
 
   on_finished:
     then:
       - logger.log: "Timer finished"
-  on_overdue:
-    then:
-      - logger.log: "Timer overdue"
 ```
 
 Trigger actions from UI or scripts:
@@ -73,15 +70,15 @@ Trigger actions from UI or scripts:
 script:
   - id: timer_start
     then:
-      - kitchen_timer.start:
-          id: kitchen_timer
+      - timer.start:
+          id: kitchentimer
           seconds: 300
 ```
 
 ## Notes
 
 - Alarm behavior is intentionally external; use triggers to play sounds or toggle outputs.
-- HA sync uses the provided HA state and remaining sensors; it does not call HA services.
+- HA sync uses the provided HA state and remaining sensors; it does not call HA services unless you add them.
 - The component clamps `set_seconds` and `remaining_seconds` to `max_duration`.
 
 ## Development

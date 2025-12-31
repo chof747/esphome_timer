@@ -31,43 +31,23 @@ CONF_ON_TICK = "on_tick"
 
 CONF_SECONDS = "seconds"
 
-kitchen_timer_ns = cg.esphome_ns.namespace("kitchen_timer")
-KitchenTimerComponent = kitchen_timer_ns.class_("KitchenTimerComponent", cg.Component)
+# Distinct namespace to avoid collisions with any future built-in timer helpers
+# while keeping the integration name short.
+timer_ns = cg.esphome_ns.namespace("timer_ext")
+TimerComponent = timer_ns.class_("TimerComponent", cg.Component)
 
-KitchenTimerStartedTrigger = kitchen_timer_ns.class_(
-    "KitchenTimerStartedTrigger", automation.Trigger.template(cg.bool_)
-)
-KitchenTimerPausedTrigger = kitchen_timer_ns.class_(
-    "KitchenTimerPausedTrigger", automation.Trigger.template(cg.bool_)
-)
-KitchenTimerResumedTrigger = kitchen_timer_ns.class_(
-    "KitchenTimerResumedTrigger", automation.Trigger.template(cg.bool_)
-)
-KitchenTimerCancelledTrigger = kitchen_timer_ns.class_(
-    "KitchenTimerCancelledTrigger", automation.Trigger.template(cg.bool_)
-)
-KitchenTimerFinishedTrigger = kitchen_timer_ns.class_(
-    "KitchenTimerFinishedTrigger", automation.Trigger.template(cg.bool_)
-)
-KitchenTimerTickTrigger = kitchen_timer_ns.class_(
-    "KitchenTimerTickTrigger", automation.Trigger.template(cg.int_)
-)
+TimerStartedTrigger = timer_ns.class_("TimerStartedTrigger", automation.Trigger.template(cg.bool_))
+TimerPausedTrigger = timer_ns.class_("TimerPausedTrigger", automation.Trigger.template(cg.bool_))
+TimerResumedTrigger = timer_ns.class_("TimerResumedTrigger", automation.Trigger.template(cg.bool_))
+TimerCancelledTrigger = timer_ns.class_("TimerCancelledTrigger", automation.Trigger.template(cg.bool_))
+TimerFinishedTrigger = timer_ns.class_("TimerFinishedTrigger", automation.Trigger.template(cg.bool_))
+TimerTickTrigger = timer_ns.class_("TimerTickTrigger", automation.Trigger.template(cg.int_))
 
-KitchenTimerStartAction = kitchen_timer_ns.class_(
-    "KitchenTimerStartAction", automation.Action
-)
-KitchenTimerPauseAction = kitchen_timer_ns.class_(
-    "KitchenTimerPauseAction", automation.Action
-)
-KitchenTimerResumeAction = kitchen_timer_ns.class_(
-    "KitchenTimerResumeAction", automation.Action
-)
-KitchenTimerCancelAction = kitchen_timer_ns.class_(
-    "KitchenTimerCancelAction", automation.Action
-)
-KitchenTimerSetSecondsAction = kitchen_timer_ns.class_(
-    "KitchenTimerSetSecondsAction", automation.Action
-)
+TimerStartAction = timer_ns.class_("TimerStartAction", automation.Action)
+TimerPauseAction = timer_ns.class_("TimerPauseAction", automation.Action)
+TimerResumeAction = timer_ns.class_("TimerResumeAction", automation.Action)
+TimerCancelAction = timer_ns.class_("TimerCancelAction", automation.Action)
+TimerSetSecondsAction = timer_ns.class_("TimerSetSecondsAction", automation.Action)
 
 SENSOR_SCHEMA = sensor.sensor_schema(
     unit_of_measurement="s",
@@ -86,13 +66,10 @@ TEXT_SENSOR_SCHEMA = text_sensor.text_sensor_schema(
 CONFIG_SCHEMA = (
     cv.Schema(
         {
-            cv.GenerateID(): cv.declare_id(KitchenTimerComponent),
-            cv.Optional(CONF_TICK_INTERVAL, default="1s"):
-                cv.positive_time_period_milliseconds,
-            cv.Optional(CONF_SYNC_INTERVAL, default="5s"):
-                cv.positive_time_period_milliseconds,
-            cv.Optional(CONF_MAX_DURATION, default="7200s"):
-                cv.positive_time_period,
+            cv.GenerateID(): cv.declare_id(TimerComponent),
+            cv.Optional(CONF_TICK_INTERVAL, default="1s"): cv.positive_time_period_milliseconds,
+            cv.Optional(CONF_SYNC_INTERVAL, default="5s"): cv.positive_time_period_milliseconds,
+            cv.Optional(CONF_MAX_DURATION, default="7200s"): cv.positive_time_period,
             cv.Optional(CONF_INITIAL_SET_SECONDS, default=0): cv.uint32_t,
             cv.Optional(CONF_ENABLE_HA_SYNC, default=True): cv.boolean,
             cv.Optional(CONF_HA_STATE_SENSOR): cv.use_id(text_sensor.TextSensor),
@@ -103,44 +80,23 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_RUNNING): BINARY_SENSOR_SCHEMA,
             cv.Optional(CONF_PAUSED): BINARY_SENSOR_SCHEMA,
             cv.Optional(CONF_OVERDUE): BINARY_SENSOR_SCHEMA,
-            cv.Optional(CONF_ON_STARTED): automation.validate_automation(
-                {cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(KitchenTimerStartedTrigger)}
-            ),
-            cv.Optional(CONF_ON_PAUSED): automation.validate_automation(
-                {cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(KitchenTimerPausedTrigger)}
-            ),
-            cv.Optional(CONF_ON_RESUMED): automation.validate_automation(
-                {cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(KitchenTimerResumedTrigger)}
-            ),
-            cv.Optional(CONF_ON_CANCELLED): automation.validate_automation(
-                {cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(KitchenTimerCancelledTrigger)}
-            ),
-            cv.Optional(CONF_ON_FINISHED): automation.validate_automation(
-                {cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(KitchenTimerFinishedTrigger)}
-            ),
-            cv.Optional(CONF_ON_TICK): automation.validate_automation(
-                {cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(KitchenTimerTickTrigger)}
-            ),
+            cv.Optional(CONF_ON_STARTED): automation.validate_automation({cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(TimerStartedTrigger)}),
+            cv.Optional(CONF_ON_PAUSED): automation.validate_automation({cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(TimerPausedTrigger)}),
+            cv.Optional(CONF_ON_RESUMED): automation.validate_automation({cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(TimerResumedTrigger)}),
+            cv.Optional(CONF_ON_CANCELLED): automation.validate_automation({cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(TimerCancelledTrigger)}),
+            cv.Optional(CONF_ON_FINISHED): automation.validate_automation({cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(TimerFinishedTrigger)}),
+            cv.Optional(CONF_ON_TICK): automation.validate_automation({cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(TimerTickTrigger)}),
         }
-    )
-    .extend(cv.COMPONENT_SCHEMA)
+    ).extend(cv.COMPONENT_SCHEMA)
 )
 
-KITCHEN_TIMER_ACTION_SCHEMA = cv.Schema({cv.Required(CONF_ID): cv.use_id(KitchenTimerComponent)})
-
-KITCHEN_TIMER_START_ACTION_SCHEMA = KITCHEN_TIMER_ACTION_SCHEMA.extend(
-    {cv.Optional(CONF_SECONDS): cv.templatable(cv.int_)}
-)
-
-KITCHEN_TIMER_SET_SECONDS_ACTION_SCHEMA = KITCHEN_TIMER_ACTION_SCHEMA.extend(
-    {cv.Required(CONF_SECONDS): cv.templatable(cv.int_)}
-)
+TIMER_ACTION_SCHEMA = cv.Schema({cv.Required(CONF_ID): cv.use_id(TimerComponent)})
+TIMER_START_ACTION_SCHEMA = TIMER_ACTION_SCHEMA.extend({cv.Optional(CONF_SECONDS): cv.templatable(cv.int_)})
+TIMER_SET_SECONDS_ACTION_SCHEMA = TIMER_ACTION_SCHEMA.extend({cv.Required(CONF_SECONDS): cv.templatable(cv.int_)})
 
 
-@automation.register_action(
-    "kitchen_timer.start", KitchenTimerStartAction, KITCHEN_TIMER_START_ACTION_SCHEMA
-)
-async def kitchen_timer_start_to_code(config, action_id, template_arg, args):
+@automation.register_action("timer.start", TimerStartAction, TIMER_START_ACTION_SCHEMA)
+async def timer_start_to_code(config, action_id, template_arg, args):
     parent = await cg.get_variable(config[CONF_ID])
     var = cg.new_Pvariable(action_id, template_arg, parent)
     if (seconds := config.get(CONF_SECONDS)) is not None:
@@ -149,36 +105,26 @@ async def kitchen_timer_start_to_code(config, action_id, template_arg, args):
     return var
 
 
-@automation.register_action(
-    "kitchen_timer.pause", KitchenTimerPauseAction, KITCHEN_TIMER_ACTION_SCHEMA
-)
-async def kitchen_timer_pause_to_code(config, action_id, template_arg, args):
+@automation.register_action("timer.pause", TimerPauseAction, TIMER_ACTION_SCHEMA)
+async def timer_pause_to_code(config, action_id, template_arg, args):
     parent = await cg.get_variable(config[CONF_ID])
     return cg.new_Pvariable(action_id, template_arg, parent)
 
 
-@automation.register_action(
-    "kitchen_timer.resume", KitchenTimerResumeAction, KITCHEN_TIMER_ACTION_SCHEMA
-)
-async def kitchen_timer_resume_to_code(config, action_id, template_arg, args):
+@automation.register_action("timer.resume", TimerResumeAction, TIMER_ACTION_SCHEMA)
+async def timer_resume_to_code(config, action_id, template_arg, args):
     parent = await cg.get_variable(config[CONF_ID])
     return cg.new_Pvariable(action_id, template_arg, parent)
 
 
-@automation.register_action(
-    "kitchen_timer.cancel", KitchenTimerCancelAction, KITCHEN_TIMER_ACTION_SCHEMA
-)
-async def kitchen_timer_cancel_to_code(config, action_id, template_arg, args):
+@automation.register_action("timer.cancel", TimerCancelAction, TIMER_ACTION_SCHEMA)
+async def timer_cancel_to_code(config, action_id, template_arg, args):
     parent = await cg.get_variable(config[CONF_ID])
     return cg.new_Pvariable(action_id, template_arg, parent)
 
 
-@automation.register_action(
-    "kitchen_timer.set_seconds",
-    KitchenTimerSetSecondsAction,
-    KITCHEN_TIMER_SET_SECONDS_ACTION_SCHEMA,
-)
-async def kitchen_timer_set_seconds_to_code(config, action_id, template_arg, args):
+@automation.register_action("timer.set_seconds", TimerSetSecondsAction, TIMER_SET_SECONDS_ACTION_SCHEMA)
+async def timer_set_seconds_to_code(config, action_id, template_arg, args):
     parent = await cg.get_variable(config[CONF_ID])
     var = cg.new_Pvariable(action_id, template_arg, parent)
     template = await cg.templatable(config[CONF_SECONDS], args, cg.int_)
