@@ -199,9 +199,13 @@ void TimerComponent::handle_ha_state_(const std::string &state) {
       this->pause(true);
     } else if (this->state_ == TimerState::STOPPED) {
       int ha_remaining = this->ha_remaining_sensor_ != nullptr ? (int) this->ha_remaining_sensor_->state : 0;
+      if (ha_remaining <= 0) {
+        ha_remaining = this->get_ha_duration_seconds_();
+      }
       if (ha_remaining > 0) {
-        this->set_seconds_ = this->clamp_seconds_(ha_remaining);
-        this->remaining_seconds_ = ha_remaining;
+        int clamped = this->clamp_seconds_(ha_remaining);
+        this->set_seconds_ = clamped;
+        this->remaining_seconds_ = clamped;
         this->state_ = TimerState::PAUSED;
         this->overdue_ = false;
         this->publish_state_();
@@ -216,7 +220,10 @@ void TimerComponent::handle_ha_state_(const std::string &state) {
     } else if (this->state_ == TimerState::STOPPED) {
       int ha_remaining = this->ha_remaining_sensor_ != nullptr ? (int) this->ha_remaining_sensor_->state : 0;
       if (ha_remaining <= 0) {
-        ha_remaining = this->set_seconds_ > 0 ? this->set_seconds_ : 0;
+        ha_remaining = this->get_ha_duration_seconds_();
+        if (ha_remaining <= 0) {
+          ha_remaining = this->set_seconds_ > 0 ? this->set_seconds_ : 0;
+        }
       }
       this->start_(ha_remaining, true);
     }
@@ -260,6 +267,31 @@ void TimerComponent::handle_ha_remaining_(float value) {
   this->remaining_seconds_ = remaining;
   this->last_ha_sync_ms_ = now;
   this->publish_state_();
+}
+
+int TimerComponent::parse_duration_seconds_(const std::string &duration) const {
+  if (duration.empty()) {
+    return 0;
+  }
+
+  int h = 0;
+  int m = 0;
+  int s = 0;
+  if (sscanf(duration.c_str(), "%d:%d:%d", &h, &m, &s) == 3) {
+    return (h * 3600) + (m * 60) + s;
+  }
+  if (sscanf(duration.c_str(), "%d:%d", &m, &s) == 2) {
+    return (m * 60) + s;
+  }
+
+  return atoi(duration.c_str());
+}
+
+int TimerComponent::get_ha_duration_seconds_() const {
+  if (this->ha_duration_sensor_ == nullptr) {
+    return 0;
+  }
+  return this->parse_duration_seconds_(this->ha_duration_sensor_->state);
 }
 
 }  // namespace timer_ext

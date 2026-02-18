@@ -38,6 +38,7 @@ class TimerComponent : public Component {
 
   void set_ha_state_sensor(text_sensor::TextSensor *sensor) { this->ha_state_sensor_ = sensor; }
   void set_ha_remaining_sensor(sensor::Sensor *sensor) { this->ha_remaining_sensor_ = sensor; }
+  void set_ha_duration_sensor(text_sensor::TextSensor *sensor) { this->ha_duration_sensor_ = sensor; }
 
   void set_remaining_seconds_sensor(sensor::Sensor *sensor) { this->remaining_seconds_sensor_ = sensor; }
   void set_set_seconds_sensor(sensor::Sensor *sensor) { this->set_seconds_sensor_ = sensor; }
@@ -75,6 +76,8 @@ class TimerComponent : public Component {
   void handle_ha_state_(const std::string &state);
   void handle_ha_remaining_(float value);
   void mark_synced_from_ha_();
+  int parse_duration_seconds_(const std::string &duration) const;
+  int get_ha_duration_seconds_() const;
 
   TimerState state_{TimerState::STOPPED};
   int set_seconds_{0};
@@ -89,6 +92,7 @@ class TimerComponent : public Component {
 
   text_sensor::TextSensor *ha_state_sensor_{nullptr};
   sensor::Sensor *ha_remaining_sensor_{nullptr};
+  text_sensor::TextSensor *ha_duration_sensor_{nullptr};
 
   sensor::Sensor *remaining_seconds_sensor_{nullptr};
   sensor::Sensor *set_seconds_sensor_{nullptr};
