@@ -14,6 +14,7 @@ CONF_INITIAL_SET_SECONDS = "initial_set_seconds"
 CONF_ENABLE_HA_SYNC = "enable_ha_sync"
 CONF_HA_STATE_SENSOR = "ha_state_sensor"
 CONF_HA_REMAINING_SENSOR = "ha_remaining_sensor"
+CONF_HA_DURATION_SENSOR = "ha_duration_sensor"
 
 CONF_STATE = "state"
 CONF_REMAINING_SECONDS = "remaining_seconds"
@@ -74,6 +75,7 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_ENABLE_HA_SYNC, default=True): cv.boolean,
             cv.Optional(CONF_HA_STATE_SENSOR): cv.use_id(text_sensor.TextSensor),
             cv.Optional(CONF_HA_REMAINING_SENSOR): cv.use_id(sensor.Sensor),
+            cv.Optional(CONF_HA_DURATION_SENSOR): cv.use_id(text_sensor.TextSensor),
             cv.Optional(CONF_STATE): TEXT_SENSOR_SCHEMA,
             cv.Optional(CONF_REMAINING_SECONDS): SENSOR_SCHEMA,
             cv.Optional(CONF_SET_SECONDS): SENSOR_SCHEMA,
@@ -149,6 +151,10 @@ async def to_code(config):
     if (ha_remaining := config.get(CONF_HA_REMAINING_SENSOR)) is not None:
         ha_remaining_sensor = await cg.get_variable(ha_remaining)
         cg.add(var.set_ha_remaining_sensor(ha_remaining_sensor))
+
+    if (ha_duration := config.get(CONF_HA_DURATION_SENSOR)) is not None:
+        ha_duration_sensor = await cg.get_variable(ha_duration)
+        cg.add(var.set_ha_duration_sensor(ha_duration_sensor))
 
     if (state := config.get(CONF_STATE)) is not None:
         state_sensor = await text_sensor.new_text_sensor(state)
